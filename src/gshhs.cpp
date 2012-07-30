@@ -1000,7 +1000,14 @@ void GshhsReader::drawSeaBorders( ocpnDC &pnt, Projection *proj )
 void GshhsReader::drawBoundaries( ocpnDC &pnt, Projection *proj )
 {
     pnt.SetBrush( *wxTRANSPARENT_BRUSH );
-    pnt.SetPen( *wxBLACK_PEN );
+
+	if( pnt.GetDC() ) {
+        wxPen* pen = wxThePenList->FindOrCreatePen( *wxBLACK, 1, wxDOT );
+		pnt.SetPen( *pen );
+    } else {
+        wxPen* pen = wxThePenList->FindOrCreatePen( wxColor( 0, 0, 0, 80 ), 1, wxDOT );
+        pnt.SetPen( *pen );
+    }
     GsshDrawLines( pnt, getList_boundaries(), proj, false );
 }
 
@@ -1014,10 +1021,10 @@ void GshhsReader::drawRivers( ocpnDC &pnt, Projection *proj )
 int GshhsReader::selectBestQuality( Projection *proj )
 {
     int bestQuality = 0;
-    if( proj->getCoefremp() > 40 ) bestQuality = 0;
-    else if( proj->getCoefremp() > 4 ) bestQuality = 1;
-    else if( proj->getCoefremp() > 0.5 ) bestQuality = 2;
-    else if( proj->getCoefremp() > 0.1 ) bestQuality = 3;
+    if( proj->getCoefremp() > 60 ) bestQuality = 0;
+    else if( proj->getCoefremp() > 1 ) bestQuality = 1;
+    else if( proj->getCoefremp() > 0.05 ) bestQuality = 2;
+    else if( proj->getCoefremp() > 0.005 ) bestQuality = 3;
     else bestQuality = 4;
 
     while( !qualityAvailable[bestQuality] ) {

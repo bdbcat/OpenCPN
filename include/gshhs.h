@@ -138,10 +138,8 @@ public:
             wxColor landColor );
 
     void drawSeaBorderLines( ocpnDC &pnt, double dx, Projection *proj );
-    std::vector<QLineF> * getCoasts()
-    {
-        return &coasts;
-    }
+    std::vector<QLineF> * getCoasts() { return &coasts; }
+
 private:
     int nbpoints;
     int x0cell, y0cell;

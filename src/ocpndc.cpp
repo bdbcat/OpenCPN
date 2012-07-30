@@ -357,16 +357,12 @@ void ocpnDC::DrawLines( int n, wxPoint points[], wxCoord xoffset, wxCoord yoffse
     else if( ConfigurePen() ) {
 
         glPushAttrib( GL_COLOR_BUFFER_BIT | GL_LINE_BIT | GL_HINT_BIT );      //Save state
+        SetGLAttrs( b_hiqual );
 
         bool b_draw_thick = false;
 
         //      Enable anti-aliased lines, at best quality
         if( b_hiqual ) {
-            glEnable( GL_LINE_SMOOTH );
-            glEnable( GL_BLEND );
-            glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-            glHint( GL_LINE_SMOOTH_HINT, GL_NICEST );
-
             if( m_pen.GetWidth() > 1 ) {
                 GLint parms[2];
                 glGetIntegerv( GL_SMOOTH_LINE_WIDTH_RANGE, &parms[0] );
@@ -376,9 +372,6 @@ void ocpnDC::DrawLines( int n, wxPoint points[], wxCoord xoffset, wxCoord yoffse
             } else
                 glLineWidth( wxMax(g_GLMinLineWidth, 1) );
         } else {
-            glDisable( GL_LINE_SMOOTH );
-            glDisable( GL_BLEND );
-
             if( m_pen.GetWidth() > 1 ) {
                 GLint parms[2];
                 glGetIntegerv( GL_ALIASED_LINE_WIDTH_RANGE, &parms[0] );
