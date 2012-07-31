@@ -1603,18 +1603,13 @@ bool Quilt::BuildExtendedChartStack(bool b_fullscreen, int ref_db_index, ViewPor
             }
         }
     }
-
-
-
-        return true;
+    return true;
 }
-
 
 
 bool Quilt::Compose( const ViewPort &vp_in )
 {
     if( !ChartData ) return false;
-
     if( m_bbusy ) return false;
 
     ChartData->UnLockCache();
@@ -1622,14 +1617,12 @@ bool Quilt::Compose( const ViewPort &vp_in )
     ViewPort vp_local = vp_in;                   // need a non-const copy
 
     //    Get Reference Chart parameters
-
     if( m_refchart_dbIndex >= 0 ) {
         const ChartTableEntry &cte_ref = ChartData->GetChartTableEntry( m_refchart_dbIndex );
         m_reference_scale = cte_ref.GetScale();
         m_reference_type = cte_ref.GetChartType();
         m_quilt_proj = ChartData->GetDBChartProj( m_refchart_dbIndex );
         m_reference_family = cte_ref.GetChartFamily();
-
     }
 
     //    Set up the vieport projection type
@@ -1659,8 +1652,6 @@ bool Quilt::Compose( const ViewPort &vp_in )
                 m_pcandidate_array->Add( qcnew );
             }
     }
-
-
 
     //    It is possible that the reference chart is not really part of the visible quilt
     //    This can happen when the reference chart is panned
@@ -2249,7 +2240,6 @@ bool Quilt::RenderQuiltRegionViewOnDC( wxMemoryDC &dc, ViewPort &vp, wxRegion &c
     double max_allowed_scale = 4. * cc1->GetAbsoluteMinScalePpm();
 
     if( GetnCharts() && !m_bbusy ) {
-        int ip = 0;
 
         wxRegion screen_region = chart_region;
 
@@ -2257,13 +2247,17 @@ bool Quilt::RenderQuiltRegionViewOnDC( wxMemoryDC &dc, ViewPort &vp, wxRegion &c
         //  Render the quilt's charts onto a temp dc
         //  and blit the active region rectangles to to target dc, one-by-one
 
-        ChartBase *pch = GetFirstChart();
+        ChartBase *chart = GetFirstChart();
+        int chartsDrawn = 0;
 
-        while( pch ) {
-            double chartMaxScale = pch->GetNormalScaleMax( cc1->GetCanvasScaleFactor(), cc1->GetCanvasWidth() );
-            if(  chartMaxScale*1.5 < vp.chart_scale ) {
-                pch = GetNextChart();
-                ip++;
+        while( chart ) {
+            bool okToRender = chart->IsLargeEnoughToRender( cc1->GetCanvasScaleFactor(), vp.chart_scale );
+
+            if( chart->GetChartProjectionType() != PROJECTION_MERCATOR && vp.b_MercatorProjectionOverride )
+                okToRender = false;
+
+            if( ! okToRender ) {
+                chart = GetNextChart();
                 continue;
             }
             QuiltPatch *pqp = GetCurrentPatch();
@@ -2277,7 +2271,7 @@ bool Quilt::RenderQuiltRegionViewOnDC( wxMemoryDC &dc, ViewPort &vp, wxRegion &c
                     if( !get_region.IsEmpty() ) {
 
                         if( !pqp->b_overlay ) {
-                            pch->RenderRegionViewOnDC( tmp_dc, vp, get_region );
+                            chart->RenderRegionViewOnDC( tmp_dc, vp, get_region );
                             screen_region.Subtract( get_region );
                         }
                     }
@@ -2294,14 +2288,16 @@ bool Quilt::RenderQuiltRegionViewOnDC( wxMemoryDC &dc, ViewPort &vp, wxRegion &c
                 }
             }
 
-            pch = GetNextChart();
-            ip++;
+            chartsDrawn++;
+            chart = GetNextChart();
         }
+
+        if( ! chartsDrawn ) cc1->GetVP().SetProjectionType( PROJECTION_MERCATOR );
 
         //    Render any Overlay patches for s57 charts(cells)
         if( m_bquilt_has_overlays ) {
-            pch = GetFirstChart();
-            while( pch ) {
+            chart = GetFirstChart();
+            while( chart ) {
                 QuiltPatch *pqp = GetCurrentPatch();
                 if( pqp->b_Valid ) {
                     if( !chart_region.IsEmpty() ) {
@@ -2310,7 +2306,7 @@ bool Quilt::RenderQuiltRegionViewOnDC( wxMemoryDC &dc, ViewPort &vp, wxRegion &c
 
                         if( !get_region.IsEmpty() ) {
                             if( pqp->b_overlay ) {
-                                s57chart *Chs57 = dynamic_cast<s57chart*>( pch );
+                                s57chart *Chs57 = dynamic_cast<s57chart*>( chart );
                                 Chs57->RenderOverlayRegionViewOnDC( tmp_dc, vp, get_region );
                             }
                         }
@@ -2327,7 +2323,7 @@ bool Quilt::RenderQuiltRegionViewOnDC( wxMemoryDC &dc, ViewPort &vp, wxRegion &c
                     }
                 }
 
-                pch = GetNextChart();
+                chart = GetNextChart();
             }
         }
 
@@ -2515,6 +2511,7 @@ ViewPort::ViewPort()
     rotation = 0.;
     b_quilt = false;
     pix_height = pix_width = 0;
+    b_MercatorProjectionOverride = false;
 }
 
 wxPoint ViewPort::GetPixFromLL( double lat, double lon ) const
@@ -4774,20 +4771,6 @@ bool ChartCanvas::SetViewPoint( double lat, double lon, double scale_ppm, double
             }
 
             if( g_bFullScreenQuilt ) {
-                /*
-                 current_ref_stack_index = -1;
-                 int ref_db_index = m_pQuilt->GetRefChartdbIndex();
-                 int proj = ChartData->GetDBChartProj(ref_db_index);
-                 VPoint.SetProjectionType(proj);
-                 VPoint.SetBoxes();
-
-                 LLBBox viewbox = VPoint.GetBBox();
-                 wxBoundingBox chart_box;
-                 ChartData->GetDBBoundingBox(ref_db_index, &chart_box);
-
-
-                 if((viewbox.Intersect( chart_box) != _OUT))
-                 */
                 current_ref_stack_index = m_pQuilt->GetRefChartdbIndex();
             }
 
@@ -4840,10 +4823,22 @@ bool ChartCanvas::SetViewPoint( double lat, double lon, double scale_ppm, double
 
             }
 
+
             // Preset the VPoint projection type to match what the quilt projection type will be
             int ref_db_index = m_pQuilt->GetRefChartdbIndex();
             int proj = ChartData->GetDBChartProj( ref_db_index );
-            VPoint.SetProjectionType( proj );
+
+            // Always keep the default Mercator projection if the reference chart is
+            // not in the PatchList or the scale is too small for it to render.
+
+            bool renderable = true;
+            ChartBase* referenceChart = ChartData->OpenChartFromDB( ref_db_index, FULL_INIT );
+            if( referenceChart )
+                renderable = referenceChart->IsLargeEnoughToRender( GetCanvasScaleFactor(), VPoint.chart_scale );
+
+            VPoint.b_MercatorProjectionOverride = ( m_pQuilt->GetnCharts() == 0 || !renderable );
+
+            if( ! VPoint.b_MercatorProjectionOverride ) VPoint.SetProjectionType( proj );
 
             VPoint.SetBoxes();
 
@@ -4858,6 +4853,7 @@ bool ChartCanvas::SetViewPoint( double lat, double lon, double scale_ppm, double
                 m_pQuilt->Compose( VPoint );
 
                 //      If the extended chart stack has changed, invalidate any cached render bitmap
+
                 if(m_pQuilt->GetXStackHash() != hash1) {
                     m_bm_cache_vp.Invalidate();
                     if(g_bopengl)
@@ -4871,7 +4867,6 @@ bool ChartCanvas::SetViewPoint( double lat, double lon, double scale_ppm, double
                 Refresh( false );
                 b_ret = true;
             }
-
             parent_frame->UpdateControlBar();
         }
 
@@ -9267,6 +9262,7 @@ void ChartCanvas::OnPaint( wxPaintEvent& event )
     if( g_bskew_comp && ( fabs( VPoint.skew ) > 0.01 ) ) b_rcache_ok = !b_newview;
 
     //  Make a special VP
+    if( VPoint.b_MercatorProjectionOverride ) VPoint.SetProjectionType( PROJECTION_MERCATOR );
     ViewPort svp = VPoint;
 
     svp.pix_width = svp.rv_rect.width;

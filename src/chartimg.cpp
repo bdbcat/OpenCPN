@@ -1020,7 +1020,7 @@ InitReturn ChartKAP::Init( const wxString& name, ChartInitFlag init_flags )
                                   msg += _T(" which is unsupported.  Disabling chart ");
                                   msg += m_FullPath;
                                   wxLogMessage(msg);
-                                  
+
                                   return INIT_FAIL_REMOVE;
                               }
 
@@ -3024,6 +3024,11 @@ bool ChartBaseBSB::AdjustVP(ViewPort &vp_last, ViewPort &vp_proposed)
       return (ret_val > 0);
 }
 
+bool ChartBaseBSB::IsLargeEnoughToRender( double canvasScaleFactor, double atScale )
+{
+    double chartMaxScale = ( canvasScaleFactor / m_ppm_avg ) * 4.0;
+    return ( chartMaxScale * 1.5 > atScale );
+}
 
 bool ChartBaseBSB::IsRenderCacheable( wxRect& source, wxRect& dest )
 {
