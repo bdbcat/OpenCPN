@@ -5,7 +5,7 @@
  * Author:   David Register
  *
  ***************************************************************************
- *   Copyright (C) 2010 by David S. Register   *
+ *   Copyright (C) 2010 by David S. Register                               *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -20,7 +20,7 @@
  *   You should have received a copy of the GNU General Public License     *
  *   along with this program; if not, write to the                         *
  *   Free Software Foundation, Inc.,                                       *
- *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,  USA.             *
+ *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,  USA.         *
  ***************************************************************************
  *
  *
@@ -33,7 +33,6 @@
 #endif //precompiled headers
 #include "dychart.h"
 
-#include "chcanv.h"
 #include "statwin.h"
 #include "chartdb.h"
 #include "chart1.h"
@@ -426,8 +425,6 @@ void PianoWin::OnPaint( wxPaintEvent& event )
             ((wxDialog*) GetParent())->SetShape( wxRegion( shape, *wxBLACK, 0 ) );
     }
     else {
-        ((ChartCanvas*)GetGrandParent())->HideChartInfoWindow();
-
         // SetShape() with a completely empty shape doesn't work, and leaving the shape
         // but hiding the window causes artifacts when dragging in GL mode on MSW.
         // The best solution found so far is to show just a single pixel, this is less

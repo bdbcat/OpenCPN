@@ -5184,7 +5184,7 @@ void MyFrame::HandlePianoClick( int selected_index, int selected_dbIndex )
     }
 
     cc1->SetQuiltChartHiLiteIndex( -1 );
-
+    cc1->HideChartInfoWindow();
     DoChartUpdate();
     cc1->ReloadVP();                  // Pick up the new selections
 }
