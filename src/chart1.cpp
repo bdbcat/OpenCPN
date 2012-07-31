@@ -191,7 +191,7 @@ wxString                  g_PrivateDataDir;
 wxString                  g_SData_Locn;
 wxString                  *pChartListFileName;
 wxString                  *pHome_Locn;
-wxString                  *pWVS_Locn;
+wxString                  *pWorldMapLocation;
 wxString                  *pInit_Chart_Dir;
 wxString                  g_csv_locn;
 wxString                  g_SENCPrefix;
@@ -1406,10 +1406,10 @@ bool MyApp::OnInit()
         pInit_Chart_Dir->Append( std_path.GetDocumentsDir() );
     }
 
-//      Establish the WorldVectorShoreline Dataset location
-    pWVS_Locn = new wxString( _T("wvsdata") );
-    pWVS_Locn->Prepend( g_SData_Locn );
-    pWVS_Locn->Append( wxFileName::GetPathSeparator() );
+//      Establish the GSHHS Dataset location
+    pWorldMapLocation = new wxString( _T("gshhs") );
+    pWorldMapLocation->Prepend( g_SData_Locn );
+    pWorldMapLocation->Append( wxFileName::GetPathSeparator() );
 
 //      Reload the config data, to pick up any missing data class configuration info
 //      e.g. s52plib, which could not be created until first config load completes
@@ -1998,7 +1998,7 @@ int MyApp::OnExit()
     delete pHome_Locn;
     delete phost_name;
     delete pInit_Chart_Dir;
-    delete pWVS_Locn;
+    delete pWorldMapLocation;
 
     delete pNMEADataSource;
     delete pNMEA_AP_Port;
@@ -2256,13 +2256,13 @@ void MyFrame::OnActivate( wxActivateEvent& event )
             stats->Hide();
             g_MacShowDialogArray.Add(stats);
         }
-        
+
         if(g_FloatingCompassDialog && g_FloatingCompassDialog->IsShown()) {
             g_FloatingCompassDialog->Hide();
             g_MacShowDialogArray.Add(g_FloatingCompassDialog);
         }
     }
-        
+
 
 #endif
 
@@ -2295,6 +2295,7 @@ void MyFrame::SetAndApplyColorScheme( ColorScheme cs )
     }
 
     g_StyleManager->GetCurrentStyle()->SetColorScheme( cs );
+    cc1->GetWorldBackgroundChart()->SetColorScheme( cs );
 
 #ifdef USE_S57
     if( ps52plib ) ps52plib->SetPLIBColorScheme( SchemeName );
@@ -3842,7 +3843,7 @@ int MyFrame::DoOptionsDialog()
 #ifdef __WXMAC__
     if(stats) stats->Hide();
 #endif
-    
+
     if( lastPage >= 0 ) SetDlg.itemNotebook4->SetSelection( lastPage );
 
     if( g_FloatingToolbarDialog) g_FloatingToolbarDialog->DisableTooltips();
@@ -4011,7 +4012,7 @@ int MyFrame::DoOptionsDialog()
 #ifdef __WXMAC__
     if(stats) stats->Show();
 #endif
-    
+
     return b_refresh_after_options;
 }
 
@@ -4580,7 +4581,7 @@ void MyFrame::OnFrameTimer1( wxTimerEvent& event )
             g_FloatingCompassDialog->Hide();
             g_MacShowDialogArray.Add(g_FloatingCompassDialog);
         }
-        
+
         if(stats && stats->IsShown()) {
             stats->Hide();
             g_MacShowDialogArray.Add(stats);
@@ -5062,7 +5063,7 @@ void MyFrame::UpdateGPSCompassStatusBox( bool b_force_new )
                         cc1->GetSize().x - g_FloatingCompassDialog->GetSize().x
                         - x_offset - cc1_edge_comp, y_offset );
                 g_FloatingCompassDialog->Move( cc1->ClientToScreen( posn_in_canvas ) );
-            
+
             } else {
                 wxPoint posn_in_canvas =
                         wxPoint(

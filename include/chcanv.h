@@ -44,6 +44,7 @@
 
 #include "chart1.h"                 // for enum types
 #include "ocpndc.h"
+#include "gshhs.h"
 
 //    Useful static routines
 void ShowAISTargetQueryDialog(wxWindow *parent, int mmsi);
@@ -219,6 +220,7 @@ public:
       ViewPort &GetVP(); const
 
       glChartCanvas *GetglCanvas(){ return m_glcc; }
+      GSHHSChart* GetWorldBackgroundChart() { return pWorldBackgroundChart; }
 
       void  SetbTCUpdate(bool f){ m_bTCupdate = f;}
       bool  GetbTCUpdate(){ return m_bTCupdate;}
@@ -449,7 +451,7 @@ private:
       int         m_curtrack_timer_msec;
       int         m_routeleg_popup_timer_msec;
 
-      WVSChart    *pwvs_chart;
+      GSHHSChart  *pWorldBackgroundChart;
 
       ChartBaseBSB *pCBSB;
       wxBitmap    *pss_overlay_bmp;

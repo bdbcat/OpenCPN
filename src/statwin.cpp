@@ -60,13 +60,13 @@ StatWin::StatWin( wxWindow *frame )
     long wstyle = wxSIMPLE_BORDER | wxFRAME_NO_TASKBAR;
 #ifndef __WXMAC__
     wstyle |= wxFRAME_SHAPED;
-#endif    
+#endif
 #ifdef __WXMAC__
     wstyle |= wxSTAY_ON_TOP;
 #endif
-    
+
     wxDialog::Create( frame, wxID_ANY, _T(""), wxPoint( 20, 20 ), wxSize( 5, 5 ), wstyle );
-    
+
     int x, y;
     GetClientSize( &x, &y );
 
@@ -419,10 +419,13 @@ void PianoWin::OnPaint( wxPaintEvent& event )
                 }
             }
         }
-#ifndef __WXMAC__        
+#ifndef __WXMAC__
         if( style->chartStatusWindowTransparent ) ( (wxDialog*) GetParent() )->SetShape(
                 wxRegion( shape, *wxBLACK, 0 ) );
-#endif        
+#endif
+    }
+    else {
+        GetParent()->Hide();
     }
 }
 
@@ -430,6 +433,8 @@ void PianoWin::SetKeyArray( ArrayOfInts array )
 {
     m_key_array = array;
     FormatKeys();
+    if( m_key_array.Count() ) GetParent()->Show();
+
 }
 
 void PianoWin::SetNoshowIndexArray( ArrayOfInts array )
