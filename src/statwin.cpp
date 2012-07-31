@@ -33,6 +33,7 @@
 #endif //precompiled headers
 #include "dychart.h"
 
+#include "chcanv.h"
 #include "statwin.h"
 #include "chartdb.h"
 #include "chart1.h"
@@ -48,9 +49,10 @@ extern MyFrame *gFrame;
 //------------------------------------------------------------------------------
 //    StatWin Implementation
 //------------------------------------------------------------------------------
-BEGIN_EVENT_TABLE(StatWin, wxWindow) EVT_PAINT(StatWin::OnPaint)
-EVT_SIZE(StatWin::OnSize)
-EVT_MOUSE_EVENTS(StatWin::MouseEvent)
+BEGIN_EVENT_TABLE(StatWin, wxWindow)
+    EVT_PAINT(StatWin::OnPaint)
+    EVT_SIZE(StatWin::OnSize)
+    EVT_MOUSE_EVENTS(StatWin::MouseEvent)
 END_EVENT_TABLE()
 
 // ctor
@@ -151,7 +153,6 @@ void StatWin::MouseEvent( wxMouseEvent& event )
 {
     int x, y;
     event.GetPosition( &x, &y );
-
 }
 
 int StatWin::GetFontHeight()
@@ -180,8 +181,9 @@ void StatWin::SetColorScheme( ColorScheme cs )
 //------------------------------------------------------------------------------
 //          TextStat Window Implementation
 //------------------------------------------------------------------------------
-BEGIN_EVENT_TABLE(TStatWin, wxWindow) EVT_PAINT(TStatWin::OnPaint)
-EVT_SIZE(TStatWin::OnSize)
+BEGIN_EVENT_TABLE(TStatWin, wxWindow)
+    EVT_PAINT(TStatWin::OnPaint)
+    EVT_SIZE(TStatWin::OnSize)
 END_EVENT_TABLE()
 
 TStatWin::TStatWin( wxFrame *frame ) :
@@ -190,7 +192,6 @@ TStatWin::TStatWin( wxFrame *frame ) :
     SetBackgroundColour( GetGlobalColor( _T("UIBDR") ) );
     pText = new wxString();
     bTextSet = false;
-
 }
 
 TStatWin::~TStatWin( void )
@@ -217,9 +218,10 @@ void TStatWin::TextDraw( const wxString& text )
 //------------------------------------------------------------------------------
 //          Piano Window Implementation
 //------------------------------------------------------------------------------
-BEGIN_EVENT_TABLE(PianoWin, wxWindow) EVT_PAINT(PianoWin::OnPaint)
-EVT_SIZE(PianoWin::OnSize)
-EVT_MOUSE_EVENTS(PianoWin::MouseEvent)
+BEGIN_EVENT_TABLE(PianoWin, wxWindow)
+    EVT_PAINT(PianoWin::OnPaint)
+    EVT_SIZE(PianoWin::OnSize)
+    EVT_MOUSE_EVENTS(PianoWin::MouseEvent)
 END_EVENT_TABLE()
 
 // Define a constructor
@@ -424,10 +426,12 @@ void PianoWin::OnPaint( wxPaintEvent& event )
             ((wxDialog*) GetParent())->SetShape( wxRegion( shape, *wxBLACK, 0 ) );
     }
     else {
+        ((ChartCanvas*)GetGrandParent())->HideChartInfoWindow();
+
         // SetShape() with a completely empty shape doesn't work, and leaving the shape
         // but hiding the window causes artifacts when dragging in GL mode on MSW.
         // The best solution found so far is to show just a single pixel, this is less
-        // disturbing than flashing piano keys when dragging.
+        // disturbing than flashing piano keys when dragging. (wxWidgets 2.8)
         if( style->chartStatusWindowTransparent )
             ((wxDialog*) GetParent())->SetShape( wxRegion( wxRect(0,0,1,1) ) );
     }

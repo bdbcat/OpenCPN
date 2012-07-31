@@ -2246,7 +2246,7 @@ bool Quilt::RenderQuiltRegionViewOnDC( wxMemoryDC &dc, ViewPort &vp, wxRegion &c
     wxRegion rendered_region;
 
     double scale_onscreen = vp.view_scale_ppm;
-    double max_allowed_scale =    4. * cc1->GetAbsoluteMinScalePpm();
+    double max_allowed_scale = 4. * cc1->GetAbsoluteMinScalePpm();
 
     if( GetnCharts() && !m_bbusy ) {
         int ip = 0;
@@ -2259,7 +2259,13 @@ bool Quilt::RenderQuiltRegionViewOnDC( wxMemoryDC &dc, ViewPort &vp, wxRegion &c
 
         ChartBase *pch = GetFirstChart();
 
-        while( pch  && (max_allowed_scale < scale_onscreen) ) {
+        while( pch ) {
+            double chartMaxScale = pch->GetNormalScaleMax( cc1->GetCanvasScaleFactor(), cc1->GetCanvasWidth() );
+            if(  chartMaxScale*1.5 < vp.chart_scale ) {
+                pch = GetNextChart();
+                ip++;
+                continue;
+            }
             QuiltPatch *pqp = GetCurrentPatch();
             if( pqp->b_Valid  ) {
                 if( !chart_region.IsEmpty() ) {
@@ -11215,7 +11221,7 @@ void glChartCanvas::OnPaint( wxPaintEvent &event )
             wxLogMessage( _T("OpenGL-> Detected Intel renderer, disabling FBO") );
             m_b_useFBO = false;
         }
-        
+
         if( !GetglEntryPoints() ) m_b_useFBO = false;              // default is false
 
         //      Can we use the stencil buffer in a FBO?
@@ -11847,7 +11853,7 @@ void glChartCanvas::RenderRasterChartRegionGL( ChartBase *chart, ViewPort &vp, w
 void glChartCanvas::RenderQuiltViewGL( ViewPort &vp, wxRegion Region )
 {
     m_gl_rendered_region.Clear();
-    
+
     if( cc1->m_pQuilt->GetnCharts() && !cc1->m_pQuilt->IsBusy() ) {
         //  Walk the region list to determine whether we need a clear before starting
         wxRegion clear_test_region = Region;
@@ -11864,7 +11870,7 @@ void glChartCanvas::RenderQuiltViewGL( ViewPort &vp, wxRegion Region )
         }
 
         //  We only need a screen clear if the test region is non-empty
-        if( !clear_test_region.IsEmpty() ) 
+        if( !clear_test_region.IsEmpty() )
             glClear( GL_COLOR_BUFFER_BIT );
 
         double scale_onscreen = vp.view_scale_ppm;
