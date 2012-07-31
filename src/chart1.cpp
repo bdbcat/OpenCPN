@@ -1639,9 +1639,9 @@ bool MyApp::OnInit()
 
     //  Yield to pick up the OnSize() calls that result from Maximize()
     Yield();
-    
+
     stats->Show();              // sometimes gets turned off in gtk??
-  
+
     wxString perspective;
     pConfig->SetPath( _T ( "/AUI" ) );
     pConfig->Read( _T ( "AUIPerspective" ), &perspective );
@@ -5504,10 +5504,7 @@ void MyFrame::UpdateControlBar( void )
 
     if( cc1->GetQuiltMode() ) {
         piano_chart_index_array = cc1->GetQuiltExtendedStackdbIndexArray();
-//            if(piano_chart_index_array.GetCount() > 1)
         stats->pPiano->SetKeyArray( piano_chart_index_array );
-//            else
-//                  stats->pPiano->SetKeyArray(empty_piano_chart_index_array);
 
         ArrayOfInts piano_active_chart_index_array = cc1->GetQuiltCandidatedbIndexArray();
         stats->pPiano->SetActiveKeyArray( piano_active_chart_index_array );
@@ -5519,10 +5516,7 @@ void MyFrame::UpdateControlBar( void )
 
     } else {
         piano_chart_index_array = ChartData->GetCSArray( pCurrentStack );
-//            if(piano_chart_index_array.GetCount() > 1)
         stats->pPiano->SetKeyArray( piano_chart_index_array );
-//            else
-//                  stats->pPiano->SetKeyArray(empty_piano_chart_index_array);
 
         ArrayOfInts piano_active_chart_index_array;
         piano_active_chart_index_array.Add( pCurrentStack->GetCurrentEntrydbIndex() );

@@ -688,9 +688,9 @@ GshhsReader::GshhsReader( Projection* proj )
     }
 
     if( maxQualityAvailable < 0 ) {
-        wxLogMessage(
-                _T("Unable to initialize background world map. No GSHHS datafiles found in %s."),
-                *pWorldMapLocation->c_str() );
+        wxString msg( _T("Unable to initialize background world map. No GSHHS datafiles found in ") );
+        msg += *pWorldMapLocation;
+        wxLogMessage( msg );
     }
 
     int q = selectBestQuality( proj );

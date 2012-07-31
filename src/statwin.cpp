@@ -420,21 +420,26 @@ void PianoWin::OnPaint( wxPaintEvent& event )
             }
         }
 #ifndef __WXMAC__
-        if( style->chartStatusWindowTransparent ) ( (wxDialog*) GetParent() )->SetShape(
-                wxRegion( shape, *wxBLACK, 0 ) );
-#endif
+        if( style->chartStatusWindowTransparent )
+            ((wxDialog*) GetParent())->SetShape( wxRegion( shape, *wxBLACK, 0 ) );
     }
     else {
-        GetParent()->Hide();
+        // SetShape() with a completely empty shape doesn't work, and leaving the shape
+        // but hiding the window causes artifacts when dragging in GL mode on MSW.
+        // The best solution found so far is to show just a single pixel, this is less
+        // disturbing than flashing piano keys when dragging.
+        if( style->chartStatusWindowTransparent )
+            ((wxDialog*) GetParent())->SetShape( wxRegion( wxRect(0,0,1,1) ) );
     }
+#else
+    }
+#endif
 }
 
 void PianoWin::SetKeyArray( ArrayOfInts array )
 {
     m_key_array = array;
     FormatKeys();
-    if( m_key_array.Count() ) GetParent()->Show();
-
 }
 
 void PianoWin::SetNoshowIndexArray( ArrayOfInts array )
