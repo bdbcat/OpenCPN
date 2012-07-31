@@ -204,7 +204,6 @@ public:
       ViewPort    m_last_vp;
       wxRegion    m_last_Region;
 
-      virtual bool IsLargeEnoughToRender( double canvasScaleFactor, double atScale );
       virtual bool IsCacheValid(){ return (pDIB != NULL); }
       virtual void InvalidateCache();
       virtual bool RenderViewOnDC(wxMemoryDC& dc, const ViewPort& VPoint);

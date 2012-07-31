@@ -5688,13 +5688,6 @@ wxString s57chart::GetAttributeDecode( wxString& att, int ival )
 
 //----------------------------------------------------------------------------------
 
-bool s57chart::IsLargeEnoughToRender( double canvasScaleFactor, double atScale )
-{
-	return (m_Chart_Scale*4. > atScale);
-}
-
-//----------------------------------------------------------------------------------
-
 bool s57chart::IsPointInObjArea( float lat, float lon, float select_radius, S57Obj *obj )
 {
     bool ret = false;

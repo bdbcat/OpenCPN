@@ -3024,12 +3024,6 @@ bool ChartBaseBSB::AdjustVP(ViewPort &vp_last, ViewPort &vp_proposed)
       return (ret_val > 0);
 }
 
-bool ChartBaseBSB::IsLargeEnoughToRender( double canvasScaleFactor, double atScale )
-{
-    double chartMaxScale = ( canvasScaleFactor / m_ppm_avg ) * 4.0;
-    return ( chartMaxScale * 1.5 > atScale );
-}
-
 bool ChartBaseBSB::IsRenderCacheable( wxRect& source, wxRect& dest )
 {
       double scale_x = (double)source.width / (double)dest.width;

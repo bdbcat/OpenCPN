@@ -163,8 +163,6 @@ class  ChartBaseBSB     :public ChartBase
 
       virtual bool GetChartExtent(Extent *pext);
 
-      virtual bool IsLargeEnoughToRender( double canvasScaleFactor, double atScale );
-
       void SetColorScheme(ColorScheme cs, bool bApplyImmediate);
 
       wxImage *GetImage();

@@ -2251,7 +2251,8 @@ bool Quilt::RenderQuiltRegionViewOnDC( wxMemoryDC &dc, ViewPort &vp, wxRegion &c
         int chartsDrawn = 0;
 
         while( chart ) {
-            bool okToRender = chart->IsLargeEnoughToRender( cc1->GetCanvasScaleFactor(), vp.chart_scale );
+            double chartMaxScale = chart->GetNormalScaleMax( cc1->GetCanvasScaleFactor(), cc1->GetCanvasWidth() );
+            bool okToRender = chartMaxScale*1.5 > vp.chart_scale;
 
             if( chart->GetChartProjectionType() != PROJECTION_MERCATOR && vp.b_MercatorProjectionOverride )
                 okToRender = false;
@@ -4833,9 +4834,11 @@ bool ChartCanvas::SetViewPoint( double lat, double lon, double scale_ppm, double
 
             bool renderable = true;
             ChartBase* referenceChart = ChartData->OpenChartFromDB( ref_db_index, FULL_INIT );
-            if( referenceChart )
-                renderable = referenceChart->IsLargeEnoughToRender( GetCanvasScaleFactor(), VPoint.chart_scale );
-
+            if( referenceChart ) {
+                double chartMaxScale = referenceChart->GetNormalScaleMax( cc1->GetCanvasScaleFactor(), cc1->GetCanvasWidth() );
+                renderable = chartMaxScale*1.5 > VPoint.chart_scale;
+            }
+                
             VPoint.b_MercatorProjectionOverride = ( m_pQuilt->GetnCharts() == 0 || !renderable );
 
             if( ! VPoint.b_MercatorProjectionOverride ) VPoint.SetProjectionType( proj );

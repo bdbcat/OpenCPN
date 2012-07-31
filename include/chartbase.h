@@ -170,7 +170,6 @@ public:
       virtual ChartDepthUnitType GetDepthUnitType(void) { return m_depth_unit_id;}
 
       virtual bool IsReadyToRender(){ return bReadyToRender;}
-      virtual bool IsLargeEnoughToRender( double canvasScaleFactor, double atScale ) { return true; }
       virtual bool RenderRegionViewOnDC(wxMemoryDC& dc, const ViewPort& VPoint,
                                         const wxRegion &Region) = 0;
 
