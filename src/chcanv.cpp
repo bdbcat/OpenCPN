@@ -11515,7 +11515,9 @@ void glChartCanvas::RenderRasterChartRegionGL( ChartBase *chart, ViewPort &vp, w
     glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
 
     //  Make a special VP to account for rotations
+    if( vp.b_MercatorProjectionOverride ) vp.SetProjectionType( PROJECTION_MERCATOR );
     ViewPort svp = vp;
+    
     svp.pix_width = svp.rv_rect.width;
     svp.pix_height = svp.rv_rect.height;
 
@@ -11857,28 +11859,46 @@ void glChartCanvas::RenderQuiltViewGL( ViewPort &vp, wxRegion Region )
         //  Walk the region list to determine whether we need a clear before starting
         wxRegion clear_test_region = Region;
 
-        ChartBase *pcht = cc1->m_pQuilt->GetFirstChart();
-        while( pcht ) {
+        ChartBase *chart = cc1->m_pQuilt->GetFirstChart();
+        while( chart ) {
+            double chartMaxScale = chart->GetNormalScaleMax( cc1->GetCanvasScaleFactor(), cc1->GetCanvasWidth() );
+            bool okToRender = chartMaxScale*1.5 > vp.chart_scale;
+            
+            if( chart->GetChartProjectionType() != PROJECTION_MERCATOR && vp.b_MercatorProjectionOverride )
+                okToRender = false;
+            
+            if( ! okToRender ) {
+                chart = cc1->m_pQuilt->GetNextChart();
+                continue;
+            }
+            
             QuiltPatch *pqp = cc1->m_pQuilt->GetCurrentPatch();
             if( pqp->b_Valid ) {
                 wxRegion get_region = pqp->ActiveRegion;
 
                 if( !get_region.IsEmpty() ) clear_test_region.Subtract( get_region );
             }
-            pcht = cc1->m_pQuilt->GetNextChart();
+            chart = cc1->m_pQuilt->GetNextChart();
         }
 
         //  We only need a screen clear if the test region is non-empty
         if( !clear_test_region.IsEmpty() )
             glClear( GL_COLOR_BUFFER_BIT );
 
-        double scale_onscreen = vp.view_scale_ppm;
-        double max_allowed_scale =    2. * cc1->GetAbsoluteMinScalePpm();
-
         //  Now render the quilt
         ChartBase *pch = cc1->m_pQuilt->GetFirstChart();
 
-        while( pch  && (max_allowed_scale < scale_onscreen) ) {
+        while( pch ) {
+            double chartMaxScale = pch->GetNormalScaleMax( cc1->GetCanvasScaleFactor(), cc1->GetCanvasWidth() );
+            bool okToRender = chartMaxScale*1.5 > vp.chart_scale;
+            
+            if( pch->GetChartProjectionType() != PROJECTION_MERCATOR && vp.b_MercatorProjectionOverride )
+                okToRender = false;
+            
+            if( ! okToRender ) {
+                pch = cc1->m_pQuilt->GetNextChart();
+                continue;
+            }
             QuiltPatch *pqp = cc1->m_pQuilt->GetCurrentPatch();
             if( pqp->b_Valid ) {
                 wxRegion get_region = pqp->ActiveRegion;
