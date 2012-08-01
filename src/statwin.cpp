@@ -532,21 +532,18 @@ void PianoWin::MouseEvent( wxMouseEvent& event )
         }
     }
 
-    else
-        if( event.RightDown() ) {
+    else if( event.RightDown() ) {
             if( -1 != sel_index ) {
                 gFrame->HandlePianoRClick( x, y, sel_index, sel_dbindex );
             }
         }
 
-        else {
-
-            if( sel_index != m_hover_last ) {
+    else if(!event.ButtonUp()){
+         if( sel_index != m_hover_last ) {
                 gFrame->HandlePianoRollover( sel_index, sel_dbindex );
                 m_hover_last = sel_index;
-            }
-
-        }
+          }
+    }
 
     if( event.Leaving() ) {
         gFrame->HandlePianoRollover( -1, -1 );
