@@ -80,8 +80,8 @@ extern ConsoleCanvas    *console;
 extern RouteList        *pRouteList;
 extern Select           *pSelect;
 extern MyConfig         *pConfig;
-extern NMEA0183         *pNMEA0183;
-extern AutoPilotWindow  *pAPilot;
+//extern NMEA0183         *pNMEA0183;
+//extern AutoPilotWindow  *pAPilot;
 extern WayPointman      *pWayPointMan;
 extern Routeman         *g_pRouteMan;
 
@@ -534,6 +534,7 @@ bool Routeman::DeactivateRoute( bool b_arrival )
 
 bool Routeman::UpdateAutopilot()
 {
+#if 0    
     if( !pAPilot->IsOK() ) return false;
 
     //    Get the requested A/P sentence
@@ -638,6 +639,8 @@ bool Routeman::UpdateAutopilot()
         }
 
     }           // while
+    
+#endif    
     return true;
 }
 

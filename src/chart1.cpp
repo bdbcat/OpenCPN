@@ -72,7 +72,7 @@
 #include "routeman.h"
 #include "statwin.h"
 #include "concanv.h"
-#include "nmea.h"
+//#include "nmea.h"
 #include "options.h"
 #include "about.h"
 #include "thumbwin.h"
@@ -82,6 +82,7 @@
 #include "routeprop.h"
 #include "toolbar.h"
 #include "compasswin.h"
+#include "datastream.h"
 
 #include "cutil.h"
 #include "routemanagerdialog.h"
@@ -142,7 +143,7 @@ MyFrame                   *gFrame;
 
 ChartCanvas               *cc1;
 ConsoleCanvas             *console;
-NMEAHandler               *g_pnmea;
+//NMEAHandler               *g_pnmea;
 StatWin                   *stats;
 
 MyConfig                  *pConfig;
@@ -218,7 +219,7 @@ wxString                  *phost_name;
 
 static unsigned int       malloc_max;
 
-OCP_NMEA_Thread           *pNMEA_Thread;
+//OCP_NMEA_Thread           *pNMEA_Thread;
 OCP_GARMIN_Thread         *pGARMIN_Thread;
 wxString                  *pNMEADataSource;
 wxString                  g_NMEABaudRate;
@@ -239,7 +240,7 @@ ChartDummy                *pDummyChart;
 
 wxString                  *pWIFIServerName;
 
-AutoPilotWindow *pAPilot;
+//AutoPilotWindow *pAPilot;
 
 ocpnToolBarSimple*        g_toolbar;
 ocpnStyle::StyleManager*  g_StyleManager;
@@ -346,7 +347,7 @@ extern HINSTANCE          s_hGLU_DLL; // Handle to DLL
 double                    g_ownship_predictor_minutes;
 int                       g_current_arrow_scale;
 
-OCP_AIS_Thread            *pAIS_Thread;
+//OCP_AIS_Thread            *pAIS_Thread;
 AIS_Decoder               *g_pAIS;
 wxString                  *pAIS_Port;
 bool                      g_bGPSAISMux;
@@ -615,6 +616,10 @@ double g_GLMinLineWidth;
 int n_NavMessageShown;
 wxString g_config_version_string;
 
+
+DataStream  *g_pDataStreamGPS;
+DataStream  *g_pDataStreamAIS;
+
 #ifndef __WXMSW__
 sigjmp_buf env;                    // the context saved by sigsetjmp();
 #endif
@@ -643,6 +648,8 @@ void appendOSDirSlash( wxString* pString );
 void InitializeUserColors( void );
 void DeInitializeUserColors( void );
 void SetSystemColors( ColorScheme cs );
+
+DEFINE_EVENT_TYPE(EVT_THREADMSG)
 
 //------------------------------------------------------------------------------
 //    PNG Icon resources
@@ -1500,7 +1507,7 @@ if( 0 == g_memCacheLimit )
     InitializeUserColors();
 
 //  Create the global instance of the CommPortManager
-    g_pCommMan = new ComPortManager;
+//    g_pCommMan = new ComPortManager;
 
     if( ( g_nframewin_x > 100 ) && ( g_nframewin_y > 100 ) && ( g_nframewin_x <= cw )
             && ( g_nframewin_y <= ch ) ) new_frame_size.Set( g_nframewin_x, g_nframewin_y );
@@ -1606,7 +1613,7 @@ if( 0 == g_memCacheLimit )
 
     stats->Show( true );
 
-    pAPilot = new AutoPilotWindow( gFrame, *pNMEA_AP_Port );
+//    pAPilot = new AutoPilotWindow( gFrame, *pNMEA_AP_Port );
 
 #ifdef USE_WIFI_CLIENT
     pWIFI = new WIFIWindow(gFrame, *pWIFIServerName );
@@ -2105,8 +2112,8 @@ EVT_TIMER(FRAME_COG_TIMER, MyFrame::OnFrameCOGTimer)
 EVT_TIMER(MEMORY_FOOTPRINT_TIMER, MyFrame::OnMemFootTimer)
 EVT_ACTIVATE(MyFrame::OnActivate)
 EVT_MAXIMIZE(MyFrame::OnMaximize)
-EVT_COMMAND(wxID_ANY, EVT_NMEA, MyFrame::OnEvtNMEA)
-EVT_COMMAND(wxID_ANY, EVT_THREADMSG, MyFrame::OnEvtTHREADMSG)
+//EVT_COMMAND(wxID_ANY, EVT_NMEA, MyFrame::OnEvtNMEA)
+//EVT_COMMAND(wxID_ANY, EVT_THREADMSG, MyFrame::OnEvtTHREADMSG)
 EVT_COMMAND(wxID_ANY, wxEVT_COMMAND_TOOL_RCLICKED, MyFrame::RequestNewToolbarArgEvent)
 EVT_ERASE_BACKGROUND(MyFrame::OnEraseBackground)
 END_EVENT_TABLE()
@@ -2153,6 +2160,8 @@ MyFrame::MyFrame( wxFrame *frame, const wxString& title, const wxPoint& pos, con
     m_ChartUpdatePeriod = 1;                  // set the default (1 sec.) period
 
 //    Establish my children
+
+#if 0
 #ifdef __WXOSX__
     if ((pNMEADataSource->Contains(_T("Serial"))) &&
             (false == ValidateSerialPortName(pNMEADataSource->mb_str(),MAX_SERIAL_PORTS)))
@@ -2182,6 +2191,24 @@ MyFrame::MyFrame( wxFrame *frame, const wxString& title, const wxPoint& pos, con
     //  Create/connect a dynamic event handler slot for OCPN_MsgEvent(s) coming from PlugIn system
     Connect( wxEVT_OCPN_MSG, (wxObjectEventFunction) (wxEventFunction) &MyFrame::OnEvtPlugInMessage );
 
+    
+#endif
+
+///BEGIN TEST
+    // test the new DataStream class
+    g_pDataStreamGPS = new DataStream( this, *pNMEADataSource, _T("4800"), DS_TYPE_INPUT );
+
+    //  Create/connect a dynamic event handler slot 
+    Connect( wxEVT_OCPN_DATASTREAM, (wxObjectEventFunction) (wxEventFunction) &MyFrame::OnEvtOCPN_NMEA );
+
+
+    g_pAIS = new AIS_Decoder( );
+    
+    g_pDataStreamAIS = new DataStream( g_pAIS, *pAIS_Port, _T("38400"), DS_TYPE_INPUT );
+    
+     
+///END TEST
+    
     bFirstAuto = true;
 
     //        Establish the system icons for the frame.
@@ -2932,11 +2959,16 @@ void MyFrame::OnCloseWindow( wxCloseEvent& event )
         g_pi_manager = NULL;
     }
 
-    if( g_pnmea ) {
-        g_pnmea->Close();
-        delete g_pnmea;
+//    if( g_pnmea ) {
+//        g_pnmea->Close();
+//        delete g_pnmea;
+//    }
+    
+    if( g_pDataStreamGPS ) {
+        g_pDataStreamGPS->Close();
+        delete g_pDataStreamGPS;
     }
-
+    
 #ifdef USE_WIFI_CLIENT
     if(pWIFI)
     {
@@ -2956,11 +2988,11 @@ void MyFrame::OnCloseWindow( wxCloseEvent& event )
 //    delete pthumbwin;
     pthumbwin = NULL;
 
-    if( pAPilot ) {
-        pAPilot->Close();
-        pAPilot->Destroy();
-        pAPilot = NULL;
-    }
+//    if( pAPilot ) {
+//        pAPilot->Close();
+//        pAPilot->Destroy();
+//        pAPilot = NULL;
+//    }
 
 //    delete g_FloatingToolbarDialog;
     g_FloatingToolbarDialog = NULL;
@@ -3826,8 +3858,8 @@ int MyFrame::DoOptionsDialog()
     pWIFI->Pause();
 #endif
 
-    if( g_pAIS ) g_pAIS->Pause();
-    if( g_pnmea ) g_pnmea->Pause();
+ //   if( g_pAIS ) g_pAIS->Pause();
+//    if( g_pnmea ) g_pnmea->Pause();
 
     bool b_sub = false;
     if( g_FloatingToolbarDialog && g_FloatingToolbarDialog->IsShown() ) {
@@ -3880,7 +3912,7 @@ int MyFrame::DoOptionsDialog()
             int dbii = ChartData->FinddbIndex( chart_file_name );
             ChartsRefresh( dbii, cc1->GetVP() );
         }
-
+#if 0
         if( ( *pNMEADataSource != previous_NMEA_source )
                 || ( previous_bGarminHost != g_bGarminHost ) ) {
             if( g_pnmea ) g_pnmea->Close();
@@ -3897,7 +3929,6 @@ int MyFrame::DoOptionsDialog()
             else
                 g_pnmea = new NMEAHandler( ID_NMEA_WINDOW, gFrame, *pNMEADataSource, g_NMEABaudRate,
                         &m_mutexNMEAEvent, g_bGarminHost );
-
             SetbFollow();
         }
 
@@ -3912,6 +3943,7 @@ int MyFrame::DoOptionsDialog()
             g_pAIS = new AIS_Decoder( ID_AIS_WINDOW, gFrame, *pAIS_Port, &m_mutexNMEAEvent );
             b_refresh_after_options = true;
         }
+#endif        
 
 #ifdef USE_S57
         if( rr & S52_CHANGED ) {
@@ -4000,8 +4032,8 @@ int MyFrame::DoOptionsDialog()
     pWIFI->UnPause();
 #endif
 
-    if( g_pAIS ) g_pAIS->UnPause();
-    if( g_pnmea ) g_pnmea->UnPause();
+//    if( g_pAIS ) g_pAIS->UnPause();
+//    if( g_pnmea ) g_pnmea->UnPause();
 
     delete pWorkDirArray;
 
@@ -4929,6 +4961,8 @@ void MyFrame::TouchAISActive( void )
 
 void MyFrame::UpdateAISTool( void )
 {
+    if(!g_pAIS) return;
+    
     bool b_need_refresh = false;
     ocpnStyle::Style* style = g_StyleManager->GetCurrentStyle();
 
@@ -6379,7 +6413,7 @@ void MyFrame::OnEvtTHREADMSG( wxCommandEvent & event )
     wxLogMessage( event.GetString() );
 }
 
-void MyFrame::OnEvtOCPN_NMEA( OCPN_NMEAEvent & event )
+void MyFrame::OnEvtOCPN_NMEA( OCPN_DataStreamEvent & event )
 {
     wxString sfixtime;
     bool bshow_tick = false;
@@ -7016,7 +7050,7 @@ void MyFrame::StopSockets( void )
     pWIFI->Pause();
 #endif
 
-    if( g_pnmea ) g_pnmea->Pause();
+//    if( g_pnmea ) g_pnmea->Pause();
 }
 
 void MyFrame::ResumeSockets( void )
@@ -7026,7 +7060,7 @@ void MyFrame::ResumeSockets( void )
     pWIFI->UnPause();
 #endif
 
-    if( g_pnmea ) g_pnmea->UnPause();
+//    if( g_pnmea ) g_pnmea->UnPause();
 }
 
 void MyFrame::LoadHarmonics()

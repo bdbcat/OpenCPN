@@ -6652,6 +6652,8 @@ void ChartCanvas::UpdateAlerts()    // pjotrc 2010.02.22
 
 void ChartCanvas::UpdateAIS()
 {
+    if(!g_pAIS) return;
+    
     //  Get the rectangle in the current dc which bounds the detected AIS targets
 
     //  Use this dc

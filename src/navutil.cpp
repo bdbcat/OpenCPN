@@ -74,7 +74,7 @@
 
 extern ChartCanvas      *cc1;
 extern MyFrame          *gFrame;
-extern NMEAHandler      *g_pnmea;
+//extern NMEAHandler      *g_pnmea;
 extern FontMgr          *pFontMgr;
 
 extern double           g_ChartNotRenderScaleFactor;
@@ -104,7 +104,7 @@ extern wxString         g_csv_locn;
 extern wxString         g_SENCPrefix;
 extern wxString         g_UserPresLibData;
 
-extern AutoPilotWindow  *pAPilot;
+//extern AutoPilotWindow  *pAPilot;
 extern wxString         *pAIS_Port;
 extern AIS_Decoder      *g_pAIS;
 extern wxString         g_SData_Locn;
@@ -1228,7 +1228,7 @@ bool RoutePoint::IsSame( RoutePoint *pOtherRP )
 bool RoutePoint::SendToGPS( wxString& com_name, wxGauge *pProgress )
 {
     bool result = false;
-    if( g_pnmea ) result = g_pnmea->SendWaypointToGPS( this, com_name, pProgress );
+//    if( g_pnmea ) result = g_pnmea->SendWaypointToGPS( this, com_name, pProgress );
 
     wxString msg;
     if( result ) msg = _("Waypoint(s) Uploaded successfully.");
@@ -2142,7 +2142,7 @@ void Route::RenameRoutePoints( void )
 bool Route::SendToGPS( wxString& com_name, bool bsend_waypoints, wxGauge *pProgress )
 {
     bool result = false;
-    if( g_pnmea ) result = g_pnmea->SendRouteToGPS( this, com_name, bsend_waypoints, pProgress );
+//    if( g_pnmea ) result = g_pnmea->SendRouteToGPS( this, com_name, bsend_waypoints, pProgress );
 
     wxString msg;
     if( result ) msg = _("Route Uploaded successfully.");
@@ -4242,6 +4242,7 @@ void MyConfig::UpdateSettings()
     Write( _T ( "GPXIODir" ), m_gpx_path );
     Write( _T ( "TCDataDir" ), g_TCData_Dir );
 
+#if 0    
     if( g_pnmea ) {
         SetPath( _T ( "/Settings/NMEADataSource" ) );
         wxString source;
@@ -4256,6 +4257,7 @@ void MyConfig::UpdateSettings()
         pAPilot->GetAP_Port( ap_port );
         Write( _T ( "Port" ), ap_port );
     }
+#endif
 
     SetPath( _T ( "/Settings/WiFiServer" ) );
     Write( _T ( "Server" ), *pWIFIServerName );
@@ -4263,8 +4265,8 @@ void MyConfig::UpdateSettings()
     if( g_pAIS ) {
         SetPath( _T ( "/Settings/AISPort" ) );
         wxString ais_port;
-        g_pAIS->GetSource( ais_port );
-        Write( _T ( "Port" ), ais_port );
+//        g_pAIS->GetSource( ais_port );
+//        Write( _T ( "Port" ), ais_port );
     }
 
     //    Fonts

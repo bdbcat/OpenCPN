@@ -1445,21 +1445,18 @@ bool AddLocaleCatalog( wxString catalog )
 
 void PushNMEABuffer( wxString buf )
 {
+    OCPN_DataStreamEvent event( wxEVT_OCPN_DATASTREAM, 0 );
+    event.SetNMEAString( buf );
+    
     if ( buf.Mid(1,2).IsSameAs(_T("AI")) || // AIALR AITXT AIVDM AIVDO
             buf.Mid(1,4).IsSameAs(_T("CDDS")) || // DSC position message
             buf.Mid(1,5).IsSameAs(_T("FRPOS")) ) // GpsGate position message
     {
-        OCPN_AISEvent event( wxEVT_OCPN_AIS, 0 );
-//            event.SetEventObject( (wxObject *)this );
-        event.SetExtraLong(EVT_AIS_PARSE_RX);
-        event.SetNMEAString( buf );
         g_pAIS->AddPendingEvent( event );
     }
     else
     {
-        OCPN_NMEAEvent event( wxEVT_OCPN_NMEA, 0 );
-        event.SetNMEAString( buf );
-        wxFrame       *pParent = s_ppim->GetParentFrame();
+        wxFrame *pParent = s_ppim->GetParentFrame();
         pParent->GetEventHandler()->AddPendingEvent( event );
     }
 }

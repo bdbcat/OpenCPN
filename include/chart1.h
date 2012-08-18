@@ -40,6 +40,7 @@
 #include "ocpn_types.h"
 
 #include "nmea0183.h"
+#include "datastream.h"
 
 WX_DEFINE_ARRAY_INT(int, ArrayOfInts);
 
@@ -199,7 +200,7 @@ class MyFrame: public wxFrame
     bool DoChartUpdate(void);
     void OnEvtNMEA(wxCommandEvent& event);
     void OnEvtTHREADMSG(wxCommandEvent& event);
-    void OnEvtOCPN_NMEA(OCPN_NMEAEvent & event);
+    void OnEvtOCPN_NMEA(OCPN_DataStreamEvent & event);
     void OnEvtPlugInMessage( OCPN_MsgEvent & event );
     void OnMemFootTimer(wxTimerEvent& event);
 
