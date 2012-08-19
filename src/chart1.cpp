@@ -2196,17 +2196,19 @@ MyFrame::MyFrame( wxFrame *frame, const wxString& title, const wxPoint& pos, con
 
 ///BEGIN TEST
     // test the new DataStream class
-    g_pDataStreamGPS = new DataStream( this, *pNMEADataSource, _T("4800"), DS_TYPE_INPUT );
+//    g_pDataStreamGPS = new DataStream( this, *pNMEADataSource, _T("4800"), DS_TYPE_INPUT );
 
-    //  Create/connect a dynamic event handler slot 
-    Connect( wxEVT_OCPN_DATASTREAM, (wxObjectEventFunction) (wxEventFunction) &MyFrame::OnEvtOCPN_NMEA );
 
 
     g_pAIS = new AIS_Decoder( );
     
     g_pDataStreamAIS = new DataStream( g_pAIS, *pAIS_Port, _T("38400"), DS_TYPE_INPUT );
     
-     
+    DataStream *pds = new DataStream( this, _T("GPSD"), _T(""), DS_TYPE_INPUT );
+    
+    //  Create/connect a dynamic event handler slot 
+    Connect( wxEVT_OCPN_DATASTREAM, (wxObjectEventFunction) (wxEventFunction) &MyFrame::OnEvtOCPN_NMEA );
+    
 ///END TEST
     
     bFirstAuto = true;

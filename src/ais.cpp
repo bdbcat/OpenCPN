@@ -44,6 +44,7 @@
 #include "georef.h"
 #include "pluginmanager.h"  // for PlugInManager
 #include "styles.h"
+#include "datastream.h"
 
 extern AISTargetQueryDialog    *g_pais_query_dialog_active;
 extern int              g_ais_query_dialog_x, g_ais_query_dialog_y;

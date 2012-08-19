@@ -40,7 +40,6 @@
 #include "ocpn_types.h"
 
 #include "nmea0183.h"
-#include "datastream.h"
 
 WX_DEFINE_ARRAY_INT(int, ArrayOfInts);
 
@@ -152,6 +151,7 @@ enum
 class ChartBase;
 class wxSocketEvent;
 class ocpnToolBarSimple;
+class OCPN_DataStreamEvent;
 
 //    A small class used in an array to describe chart directories
 class ChartDirInfo

@@ -91,7 +91,7 @@ wxEvent* OCPN_DataStreamEvent::Clone() const
 
 BEGIN_EVENT_TABLE(DataStream, wxEvtHandler)
 
-//           EVT_SOCKET(SOCKET_ID, DataStream::OnSocketEvent)
+    EVT_SOCKET(DS_SOCKET_ID, DataStream::OnSocketEvent)
 //  EVT_TIMER(TIMER_NMEA1, DataStream::OnTimerNMEA)
 
   END_EVENT_TABLE()
@@ -126,6 +126,7 @@ void DataStream::Init(void)
     m_bok = false;
     SetSecThreadInActive();
     m_Thread_run_flag = -1;
+    m_sock = 0;
     
 }
 
@@ -169,8 +170,41 @@ void DataStream::Open(void)
             
             m_bok = true;
         }
-    }
+        else if(m_portstring.Contains(_T("GPSD"))) {
             
+            //  Capture the  parameters from the portstring
+            m_gpsd_addr = _T("127.0.0.1");              // defaults
+            m_gpsd_port = _T("2947");
+            
+            wxStringTokenizer tkz(m_portstring, _T(":"));
+            wxString token = tkz.GetNextToken();                //GPSD
+            
+            token = tkz.GetNextToken();                         //ip
+            if(!token.IsEmpty())
+                m_gpsd_addr = token;
+            
+            token = tkz.GetNextToken();                         //port
+            if(!token.IsEmpty())
+                m_gpsd_port = token;
+            
+            // Create the socket to the GPSD Daemon
+            m_sock = new wxSocketClient();
+                
+            // Setup the event handler and subscribe to most events
+            m_sock->SetEventHandler(*this, DS_SOCKET_ID);
+                
+            m_sock->SetNotify(wxSOCKET_CONNECTION_FLAG |
+                wxSOCKET_INPUT_FLAG |
+                wxSOCKET_LOST_FLAG);
+            m_sock->Notify(TRUE);
+            m_sock->SetTimeout(1);              // Short timeout
+
+            m_addr.Hostname(m_gpsd_addr);
+            m_addr.Service(m_gpsd_port);
+            m_sock->Connect(m_addr, FALSE);       // Non-blocking connect
+            
+        }
+    }
 }
 
 
@@ -206,7 +240,95 @@ void DataStream::Close()
           m_pSecondary_Thread = NULL;
           m_bsec_thread_active = false;
       }
+      
+      //    Kill off the TCP Socket if alive
+      if(m_sock)
+      {
+          m_sock->Notify(FALSE);
+          m_sock->Destroy();
+      }
 }
+
+
+void DataStream::OnSocketEvent(wxSocketEvent& event)
+{
+    #define RD_BUF_SIZE    200
+  
+    unsigned char *bp;
+    unsigned char buf[RD_BUF_SIZE + 1];
+    int char_count;
+    wxString str_buf;
+    
+    switch(event.GetSocketEvent())
+    {
+        case wxSOCKET_INPUT :                     // from gpsd Daemon
+        {
+            m_sock->SetFlags(wxSOCKET_WAITALL | wxSOCKET_BLOCK);      // was (wxSOCKET_NOWAIT);
+            // We use wxSOCKET_BLOCK to avoid Yield() reentrancy problems
+            // if a long ProgressDialog is active, as in S57 SENC creation.
+            
+            
+            //    Disable input event notifications to preclude re-entrancy on non-blocking socket
+            //           m_sock->SetNotify(wxSOCKET_LOST_FLAG);
+            
+            //          Read the reply, one character at a time, looking for 0x0a (lf)
+            //          If the reply contains no lf, break on the buffer full
+            
+            bp = buf;
+            char_count = 0;
+            
+            while (char_count < RD_BUF_SIZE)
+            {
+                m_sock->Read(bp, 1);
+                
+                if(m_sock->Error())
+                    break;                    // non-specific error, maybe timeout...
+                    
+                    if(*bp == 0x0a)                 // end of sentence
+                      break;
+                    
+                    bp++;
+                char_count++;
+            }
+            
+            *bp = 0;                        // end string
+            
+            //          Validate the string
+            
+            str_buf = wxString((const char *)buf, wxConvUTF8);
+            
+            //  Ignore any JSON status messages, take only NMEA-like data
+            if( str_buf.StartsWith( _T("$GP") ) ) {
+                OCPN_DataStreamEvent Nevent(wxEVT_OCPN_DATASTREAM, 0);
+                Nevent.SetNMEAString(str_buf);
+                if( m_consumer )
+                    m_consumer->AddPendingEvent(Nevent);
+            }
+            
+            break;
+        }   
+            
+        case wxSOCKET_LOST:
+        {
+   //          wxSocketError e = m_sock->LastError();          // this produces wxSOCKET_WOULDBLOCK.
+                break;
+        }
+            
+        case wxSOCKET_CONNECTION :
+        {
+                //      Sign up for watcher mode, raw NMEA
+                char cmd[] = "?WATCH={\"class\":\"WATCH\", \"raw\":1,\"scaled\":true}";
+                m_sock->Write(cmd, strlen(cmd));
+                
+                break;
+        }
+            
+        default :
+                break;
+    }
+}
+
+
 
 
 void DataStream::OnTimerNMEA(wxTimerEvent& event)
@@ -1023,7 +1145,8 @@ void OCP_DataStreamInput_Thread::Parse_And_Send_Posn(wxString &str_temp_buf)
 
       OCPN_DataStreamEvent Nevent(wxEVT_OCPN_DATASTREAM, 0);
       Nevent.SetNMEAString(str_temp_buf);
-      m_pMessageTarget->AddPendingEvent(Nevent);
+      if( m_pMessageTarget )
+          m_pMessageTarget->AddPendingEvent(Nevent);
 
       return;
 }
@@ -1036,7 +1159,8 @@ void OCP_DataStreamInput_Thread::ThreadMessage(const wxString &msg)
       wxCommandEvent event( EVT_THREADMSG,  GetId());
       event.SetEventObject( (wxObject *)this );
       event.SetString(msg);
-      m_pMessageTarget->AddPendingEvent(event);
+      if( m_pMessageTarget )
+          m_pMessageTarget->AddPendingEvent(event);
 
 }
 

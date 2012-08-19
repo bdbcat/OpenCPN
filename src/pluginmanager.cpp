@@ -41,6 +41,7 @@
 #include "chartdbs.h"
 #include "ocpndc.h"
 #include "styles.h"
+#include "datastream.h"
 
 extern MyConfig        *pConfig;
 extern FontMgr         *pFontMgr;

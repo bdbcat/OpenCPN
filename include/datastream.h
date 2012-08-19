@@ -40,6 +40,7 @@
 
 
 #include <wx/datetime.h>
+#include <wx/socket.h>
 
 
 #ifdef __POSIX__
@@ -77,6 +78,7 @@ enum {
     DS_HANDSHAKE_XON_XOFF
 };
 
+#define DS_SOCKET_ID             5001
 
 // Class declarations
 class OCP_DataStreamInput_Thread;
@@ -169,7 +171,7 @@ private:
     void Init(void);
     void Open(void);
     
-//    void OnSocketEvent(wxSocketEvent& event);
+    void OnSocketEvent(wxSocketEvent& event);
     void OnTimerNMEA(wxTimerEvent& event);
 
 
@@ -186,6 +188,12 @@ private:
     OCP_DataStreamInput_Thread *m_pSecondary_Thread;
     bool                m_bsec_thread_active;
     int                 m_last_error;
+
+    wxIPV4address       m_addr;
+    wxSocketClient      *m_sock;
+    wxString            m_gpsd_addr;
+    wxString            m_gpsd_port;
+    
     
 DECLARE_EVENT_TABLE()
 };
